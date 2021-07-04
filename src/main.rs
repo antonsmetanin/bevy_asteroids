@@ -49,7 +49,7 @@ fn keyboard_input_system(
     keyboard_input: Res<Input<KeyCode>>,
     mut query: Query<(&mut Velocity, &mut Transform), With<Player>>
 ) {
-    for (mut velocity, mut transform) in query.iter_mut() {
+    if let Ok((mut velocity, mut transform)) = query.single_mut() {
         let shift = if keyboard_input.pressed(KeyCode::W) {
             Vec3::new(0.0, 1.0, 0.0)
         } else if keyboard_input.pressed(KeyCode::S) {
