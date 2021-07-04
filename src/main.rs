@@ -73,10 +73,23 @@ fn keyboard_input_system(
 fn apply_velocity(
     time: Res<Time>,
     task_pool: Res<ComputeTaskPool>,
+    windows: Res<Windows>,
     mut query: Query<(&mut Transform, &Velocity)>
 ) {
     query.par_for_each_mut(&task_pool, 32, |(mut transform, velocity)| {
         transform.translation += velocity.0.extend(0.0) * time.delta_seconds();
+        let window = windows.get_primary().unwrap();
+
+        wrap_position(&mut transform.translation.x, window.width());
+        wrap_position(&mut transform.translation.y, window.height());
+
+        fn wrap_position(position: &mut f32, size: f32) {
+            if *position > size / 2.0 {
+                *position -= size;
+            } else if *position < -size / 2.0 {
+                *position += size;
+            }
+        }
     })
 }
 
