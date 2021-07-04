@@ -49,14 +49,14 @@ fn keyboard_input_system(
 ) {
     if let Ok((mut velocity, mut transform)) = query.single_mut() {
         let shift = if keyboard_input.pressed(KeyCode::W) {
-            Vec3::new(0.0, 1.0, 0.0)
+            Vec2::new(0.0, 1.0)
         } else if keyboard_input.pressed(KeyCode::S) {
-            Vec3::new(0.0, -1.0, 0.0)
+            Vec2::new(0.0, -1.0)
         } else {
-            Vec3::new(0.0, 0.0, 0.0)
+            Vec2::new(0.0, 0.0)
         };
 
-        let rotation : f32 = if keyboard_input.pressed(KeyCode::A) {
+        let angle : f32 = if keyboard_input.pressed(KeyCode::A) {
             1.0
         } else if keyboard_input.pressed(KeyCode::D) {
             -1.0
@@ -64,8 +64,8 @@ fn keyboard_input_system(
             0.0
         };
 
-        transform.rotation = transform.rotation.mul_quat(Quat::from_rotation_z(time.delta_seconds() * rotation));
-        velocity.0 += transform.rotation.mul_vec3(time.delta_seconds() * shift).into();
+        transform.rotation = transform.rotation * (Quat::from_rotation_z(time.delta_seconds() * angle));
+        velocity.0 += (transform.rotation * (time.delta_seconds() * shift.extend(0.0))).truncate();
     }
 }
 
