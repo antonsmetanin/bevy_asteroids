@@ -1,13 +1,11 @@
-use bevy::{
-    input::{keyboard::KeyCode, Input},
-    prelude::*,
-};
+use bevy::{input::{keyboard::KeyCode, Input}, prelude::*, tasks::ComputeTaskPool};
 
 fn main() {
     App::build()
         .add_plugins(DefaultPlugins)
         .add_startup_system(setup.system())
         .add_system(keyboard_input_system.system())
+        .add_system(apply_velocity.system())
         .run();
 }
 
@@ -69,4 +67,14 @@ fn keyboard_input_system(
         transform.rotation = transform.rotation.mul_quat(Quat::from_rotation_z(time.delta_seconds() * rotation));
         velocity.0 += transform.rotation.mul_vec3(time.delta_seconds() * shift).into();
     }
+}
+
+fn apply_velocity(
+    task_pool: Res<ComputeTaskPool>,
+    mut query: Query<(&mut Transform, &Velocity)>
+) {
+    query.par_for_each_mut(&task_pool, 32, |(mut transform, velocity)| {
+        let rotated_velocity = transform.rotation * velocity.0.extend(0.0);
+        transform.translation += rotated_velocity;
+    })
 }
