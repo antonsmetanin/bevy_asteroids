@@ -74,7 +74,6 @@ fn apply_velocity(
     mut query: Query<(&mut Transform, &Velocity)>
 ) {
     query.par_for_each_mut(&task_pool, 32, |(mut transform, velocity)| {
-        let rotated_velocity = transform.rotation * velocity.0.extend(0.0);
-        transform.translation += rotated_velocity;
+        transform.translation += velocity.0.extend(0.0);
     })
 }
