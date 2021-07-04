@@ -1,4 +1,12 @@
-use bevy::{input::{keyboard::KeyCode, Input}, prelude::*, tasks::ComputeTaskPool};
+use bevy::{
+    input::{
+        keyboard::KeyCode,
+        Input
+    },
+    prelude::*,
+    tasks::ComputeTaskPool
+};
+use rand::random;
 
 fn main() {
     App::build()
@@ -20,30 +28,51 @@ struct Velocity(Vec2);
 
 fn setup(
     mut commands: Commands,
+    windows: Res<Windows>,
     asset_server: Res<AssetServer>,
     mut bullet_handle_res: ResMut<BulletMatHandle>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-    let player_sprite = asset_server.load("player.png");
-    let asteroid_sprite = asset_server.load("rock.png");
     let bullet_sprite = asset_server.load("shot.png");
     let bullet_mat = materials.add(bullet_sprite.into());
     bullet_handle_res.0 = Some(bullet_mat);
 
+    // Spawn camera
+
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
+
+    // Spawn player
 
     commands
         .spawn_bundle(SpriteBundle {
-            material: materials.add(player_sprite.into()),
+            material: materials.add(asset_server.load("player.png").into()),
             ..Default::default()
         })
         .insert(Velocity(Vec2::new(0.0, 0.0)))
         .insert(Player);
 
-    commands.spawn_bundle(SpriteBundle {
-        material: materials.add(asteroid_sprite.into()),
-        ..Default::default()
-    });
+    // Spawn asteroids
+
+    let asteroid_sprite = asset_server.load("rock.png");
+    let window = windows.get_primary().unwrap();
+    let max_velocity : f32 = 80.0;
+    
+    for _ in 0..30 {
+        commands
+            .spawn_bundle(SpriteBundle {
+                material: materials.add(asteroid_sprite.clone().into()),
+                transform: Transform::from_translation(Vec3::new(
+                    window.width() * (random::<f32>() - 0.5),
+                    window.height() * (random::<f32>() - 0.5),
+                    0.0
+                )),
+                ..Default::default()
+            })
+            .insert(Velocity(Vec2::new(
+                max_velocity * (random::<f32>() - 0.5),
+                max_velocity * (random::<f32>() - 0.5),
+            )));
+    }
 }
 
 fn keyboard_input_system(
