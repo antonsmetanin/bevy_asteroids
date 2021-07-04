@@ -6,7 +6,7 @@ fn main() {
         .add_startup_system(setup.system())
         .add_system(keyboard_input_system.system())
         .add_system(apply_velocity.system())
-        .add_startup_system(apply_friction.system())
+        .add_system(apply_friction.system())
         .run();
 }
 
@@ -66,7 +66,7 @@ fn keyboard_input_system(
         };
 
         transform.rotation = transform.rotation * (Quat::from_rotation_z(time.delta_seconds() * angle));
-        velocity.0 += (transform.rotation * (time.delta_seconds() * shift.extend(0.0) * 30.0)).truncate();
+        velocity.0 += (transform.rotation * (time.delta_seconds() * shift.extend(0.0) * 80.0)).truncate();
     }
 }
 
@@ -98,7 +98,8 @@ fn apply_friction(
     mut query: Query<&mut Velocity, With<Player>>
 ) {
     if let Ok(mut velocity) = query.single_mut() {
-        let friction = velocity.0.normalize();
-        velocity.0 -= friction * 10.0 * time.delta_seconds();
+        if let Some(friction) = velocity.0.try_normalize() {
+            velocity.0 -= friction * 30.0 * time.delta_seconds();
+        };
     }
 }
