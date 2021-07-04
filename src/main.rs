@@ -33,7 +33,3 @@ fn setup(
         ..Default::default()
     });
 }
-
-}
-
-}
