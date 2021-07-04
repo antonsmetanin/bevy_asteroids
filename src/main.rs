@@ -6,6 +6,7 @@ fn main() {
         .add_startup_system(setup.system())
         .add_system(keyboard_input_system.system())
         .add_system(apply_velocity.system())
+        .add_startup_system(apply_friction.system())
         .run();
 }
 
@@ -65,15 +66,26 @@ fn keyboard_input_system(
         };
 
         transform.rotation = transform.rotation * (Quat::from_rotation_z(time.delta_seconds() * angle));
-        velocity.0 += (transform.rotation * (time.delta_seconds() * shift.extend(0.0))).truncate();
+        velocity.0 += (transform.rotation * (time.delta_seconds() * shift.extend(0.0) * 30.0)).truncate();
     }
 }
 
 fn apply_velocity(
+    time: Res<Time>,
     task_pool: Res<ComputeTaskPool>,
     mut query: Query<(&mut Transform, &Velocity)>
 ) {
     query.par_for_each_mut(&task_pool, 32, |(mut transform, velocity)| {
-        transform.translation += velocity.0.extend(0.0);
+        transform.translation += velocity.0.extend(0.0) * time.delta_seconds();
     })
+}
+
+fn apply_friction(
+    time: Res<Time>,
+    mut query: Query<&mut Velocity, With<Player>>
+) {
+    if let Ok(mut velocity) = query.single_mut() {
+        let friction = velocity.0.normalize();
+        velocity.0 -= friction * 10.0 * time.delta_seconds();
+    }
 }
